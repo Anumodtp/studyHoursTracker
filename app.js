@@ -5,7 +5,6 @@ const hoursInput = document.getElementById('hours');
 const quoteContainer = document.getElementById('quote-container');
 const themeToggleBtn = document.getElementById('theme-toggle');
 
-dateInput.valueAsDate = new Date();
 let myChart = null;
 
 // --- Theme Logic ---
@@ -21,18 +20,18 @@ function applyTheme() {
     }
 }
 
-// Apply initial theme on load
 applyTheme();
 
 themeToggleBtn.addEventListener('click', () => {
     isLightMode = !isLightMode;
     localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
     applyTheme();
-    updateUI(); // Redraw chart with new colors
+    updateUI(); 
 });
 
 // --- Quotes Array ---
 const quotes = [
+    "Chase goals instead of holes - Shafi",
     "Consistency is what transforms average into excellence.",
     "The expert in anything was once a beginner.",
     "Small disciplines repeated with consistency every day lead to great achievements.",
@@ -76,6 +75,29 @@ if (!sessions || sessions.length === 0) {
     localStorage.setItem('studyDB_v2', JSON.stringify(sessions));
 }
 
+// --- Smart Date Helper ---
+// Takes a date string (YYYY-MM-DD) and returns the string for the next day
+function getNextDayStr(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    const nextDate = new Date(year, month - 1, day);
+    nextDate.setDate(nextDate.getDate() + 1);
+    
+    const nextYear = nextDate.getFullYear();
+    const nextMonth = String(nextDate.getMonth() + 1).padStart(2, '0');
+    const nextDay = String(nextDate.getDate()).padStart(2, '0');
+    
+    return `${nextYear}-${nextMonth}-${nextDay}`;
+}
+
+// Set initial date on load
+if (sessions.length > 0) {
+    const sortedDates = sessions.map(s => s.date).sort();
+    const latestDate = sortedDates[sortedDates.length - 1];
+    dateInput.value = getNextDayStr(latestDate);
+} else {
+    dateInput.valueAsDate = new Date();
+}
+
 // --- Core Logic ---
 function updateUI() {
     let totalHours = 0;
@@ -115,7 +137,9 @@ function updateChart(sortedDates, hoursByDate) {
 
     const formattedLabels = sortedDates.map(dateStr => {
         const d = new Date(dateStr);
-        return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+        const day = d.toLocaleDateString('en-US', { day: '2-digit' });
+        const month = d.toLocaleDateString('en-US', { month: 'short' });
+        return [day, month]; 
     });
 
     const lineColor = isLightMode ? '#111111' : '#ffffff';
@@ -153,8 +177,9 @@ function updateChart(sortedDates, hoursByDate) {
                     grid: { display: false }, 
                     ticks: { 
                         color: textColor, 
-                        maxTicksLimit: 6, 
-                        maxRotation: 0 
+                        maxTicksLimit: 15, 
+                        maxRotation: 0,
+                        font: { size: 10 } 
                     } 
                 }
             },
@@ -184,7 +209,11 @@ form.addEventListener('submit', (e) => {
     }
 
     localStorage.setItem('studyDB_v2', JSON.stringify(sessions));
+    
+    // Automatically advance to the next day and clear the hours input
+    dateInput.value = getNextDayStr(dateInput.value);
     hoursInput.value = '';
+    
     updateUI();
 });
 
