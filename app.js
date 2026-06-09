@@ -4,14 +4,9 @@ const dateInput = document.getElementById('date');
 const hoursInput = document.getElementById('hours');
 const quoteContainer = document.getElementById('quote-container');
 const themeToggleBtn = document.getElementById('theme-toggle');
-
-const btn30Days = document.getElementById('btn-30days');
-const btnAll = document.getElementById('btn-all');
 const monthSelect = document.getElementById('month-select');
 
 let myChart = null;
-let currentView = '30days'; 
-let selectedMonthStr = ''; 
 
 // --- Theme Logic ---
 let isLightMode = localStorage.getItem('theme') === 'light';
@@ -35,33 +30,9 @@ themeToggleBtn.addEventListener('click', () => {
     updateUI(); 
 });
 
-// --- View Controls Logic ---
-btn30Days.addEventListener('click', () => {
-    currentView = '30days';
-    btn30Days.classList.add('active');
-    btnAll.classList.remove('active');
-    monthSelect.value = ''; 
+// --- View Change Event ---
+monthSelect.addEventListener('change', () => {
     updateUI();
-});
-
-btnAll.addEventListener('click', () => {
-    currentView = 'all';
-    btnAll.classList.add('active');
-    btn30Days.classList.remove('active');
-    monthSelect.value = ''; 
-    updateUI();
-});
-
-monthSelect.addEventListener('change', (e) => {
-    if (e.target.value !== '') {
-        currentView = 'month';
-        selectedMonthStr = e.target.value; 
-        btn30Days.classList.remove('active');
-        btnAll.classList.remove('active');
-        updateUI();
-    } else {
-        btn30Days.click(); // Fallback if they select the empty default option
-    }
 });
 
 // --- Quotes Array ---
@@ -109,17 +80,16 @@ if (!sessions || sessions.length === 0) {
     localStorage.setItem('studyDB_v2', JSON.stringify(sessions));
 }
 
-// Scans database to populate the month dropdown
 function populateMonthsDropdown() {
     const months = new Set();
     sessions.forEach(s => {
-        months.add(s.date.substring(0, 7)); // Extracts 'YYYY-MM'
+        months.add(s.date.substring(0, 7)); 
     });
     
     const sortedMonths = Array.from(months).sort().reverse(); 
     const currentVal = monthSelect.value;
     
-    monthSelect.innerHTML = '<option value="">Select Month...</option>';
+    monthSelect.innerHTML = '<option value="all">All Time</option>';
     
     sortedMonths.forEach(m => {
         const [year, month] = m.split('-');
@@ -132,8 +102,10 @@ function populateMonthsDropdown() {
         monthSelect.appendChild(option);
     });
     
-    if (sortedMonths.includes(currentVal)) {
+    if (currentVal && (sortedMonths.includes(currentVal) || currentVal === 'all')) {
         monthSelect.value = currentVal;
+    } else {
+        monthSelect.value = 'all'; // Default
     }
 }
 
@@ -167,13 +139,12 @@ function updateUI() {
     });
 
     const allSortedDates = Object.keys(allHoursByDate).sort();
+    const selectedView = monthSelect.value;
     
-    // Filter dates based on current view
+    // Filter dates based on dropdown
     let displayDates = allSortedDates;
-    if (currentView === '30days') {
-        displayDates = allSortedDates.slice(-30);
-    } else if (currentView === 'month') {
-        displayDates = allSortedDates.filter(date => date.startsWith(selectedMonthStr));
+    if (selectedView !== 'all') {
+        displayDates = allSortedDates.filter(date => date.startsWith(selectedView));
     }
 
     // Calculate Stats
@@ -217,6 +188,9 @@ function updateChart(displayDates, allHoursByDate) {
     const gridColor = isLightMode ? '#dddddd' : '#222222';
     const textColor = isLightMode ? '#555555' : '#888888';
 
+    // Smart Scaling: Hide dots if there are too many data points to prevent clutter
+    const dynamicPointRadius = displayDates.length > 60 ? 0 : 1;
+
     myChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -227,7 +201,7 @@ function updateChart(displayDates, allHoursByDate) {
                 borderColor: lineColor,
                 backgroundColor: bgColor,
                 borderWidth: 2,
-                pointRadius: 1,
+                pointRadius: dynamicPointRadius,
                 pointHoverRadius: 5,
                 pointBackgroundColor: lineColor,
                 fill: true,
@@ -247,7 +221,7 @@ function updateChart(displayDates, allHoursByDate) {
                     grid: { display: false }, 
                     ticks: { 
                         color: textColor, 
-                        maxTicksLimit: 15, 
+                        maxTicksLimit: 15, // Keeps text readable no matter how much data exists
                         maxRotation: 0,
                         font: { size: 10 } 
                     } 
@@ -280,7 +254,7 @@ form.addEventListener('submit', (e) => {
 
     localStorage.setItem('studyDB_v2', JSON.stringify(sessions));
     
-    populateMonthsDropdown(); // Re-scan in case they just added a new month
+    populateMonthsDropdown(); 
     
     dateInput.value = getNextDayStr(dateInput.value);
     hoursInput.value = '';
