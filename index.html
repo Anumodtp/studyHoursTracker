@@ -8,42 +8,42 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <button id="theme-toggle" class="theme-toggle">☀️ Light Mode</button>
+
     <div class="container">
-        <h1>Study Hours Tracker</h1>
+        <div class="quote-container" id="quote-container">
+            </div>
         
-        <div class="card">
-            <h2>Log Your Session</h2>
-            <form id="tracker-form">
-                <div class="form-group">
-                    <label for="date">Date:</label>
-                    <input type="date" id="date" required>
-                </div>
-                <div class="form-group">
-                    <label for="subject">Subject / Task:</label>
-                    <input type="text" id="subject" placeholder="e.g., DevOps" required>
-                </div>
-                <div class="form-group">
-                    <label for="hours">Hours Studied:</label>
-                    <input type="number" id="hours" min="0.1" step="0.1" placeholder="e.g., 2.5" required>
-                </div>
-                <button type="submit">Add Session</button>
-            </form>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Hours</h3>
+                <p id="total-hours">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Current Streak</h3>
+                <p id="streak-days">0 <span>days</span></p>
+            </div>
+            <div class="stat-card">
+                <h3>Daily Average</h3>
+                <p id="avg-hours">0 <span>hrs</span></p>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>Study Trends</h2>
+        <div class="card graph-card">
             <canvas id="studyChart"></canvas>
         </div>
 
-        <div class="card">
-            <h2>Total Progress: <span id="total-hours">0</span> Hours</h2>
-            <ul id="log-list" class="log-list"></ul>
-            <button id="clear-btn" class="clear-btn">Clear All Data</button>
+        <div class="card form-card">
+            <form id="tracker-form">
+                <div class="input-row">
+                    <input type="date" id="date" required>
+                    <input type="number" id="hours" min="0.1" step="0.1" placeholder="Hours (e.g., 2.5)" required>
+                    <button type="submit">Log</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script src="app.js"></script>
-</body>
-</html>
 </body>
 </html>
