@@ -14,10 +14,10 @@ let isLightMode = localStorage.getItem('theme') === 'light';
 function applyTheme() {
     if (isLightMode) {
         document.body.classList.add('light-mode');
-        themeToggleBtn.textContent = '🌙 Dark Mode';
+        themeToggleBtn.textContent = '🌙';
     } else {
         document.body.classList.remove('light-mode');
-        themeToggleBtn.textContent = '☀️ Light Mode';
+        themeToggleBtn.textContent = '☀️';
     }
 }
 
@@ -38,7 +38,17 @@ const quotes = [
     "Small disciplines repeated with consistency every day lead to great achievements.",
     "Don't stop when you're tired. Stop when you're done.",
     "Focus on being productive instead of busy.",
-    "Success is the sum of small efforts, repeated day in and day out."
+    "Success is the sum of small efforts, repeated day in and day out.",
+    "It always seems impossible until it's done.",
+    "The future depends on what you do today.",
+    "Strive for progress, not perfection.",
+    "Do something today that your future self will thank you for.",
+    "There are no shortcuts to any place worth going.",
+    "Discipline is choosing between what you want now and what you want most.",
+    "Motivation gets you going, but discipline keeps you growing.",
+    "You don't have to be great to start, but you have to start to be great.",
+    "Doubt kills more dreams than failure ever will.",
+    "The secret of getting ahead is getting started."
 ];
 
 // --- Pre-loaded Historical Data ---
@@ -108,9 +118,8 @@ function updateChart(sortedDates, hoursByDate) {
         return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
     });
 
-    // Dynamic colors based on theme
     const lineColor = isLightMode ? '#111111' : '#ffffff';
-    const bgColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+    const bgColor = isLightMode ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
     const gridColor = isLightMode ? '#dddddd' : '#222222';
     const textColor = isLightMode ? '#555555' : '#888888';
 
@@ -124,7 +133,8 @@ function updateChart(sortedDates, hoursByDate) {
                 borderColor: lineColor,
                 backgroundColor: bgColor,
                 borderWidth: 2,
-                pointRadius: 4,
+                pointRadius: 1,
+                pointHoverRadius: 5,
                 pointBackgroundColor: lineColor,
                 fill: true,
                 tension: 0.3
@@ -134,10 +144,25 @@ function updateChart(sortedDates, hoursByDate) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
-                x: { grid: { display: false }, ticks: { color: textColor, maxTicksLimit: 10 } }
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: gridColor }, 
+                    ticks: { color: textColor } 
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { 
+                        color: textColor, 
+                        maxTicksLimit: 6, 
+                        maxRotation: 0 
+                    } 
+                }
             },
-            plugins: { legend: { display: false } }
+            plugins: { legend: { display: false } },
+            interaction: {
+                mode: 'nearest',
+                intersect: false,
+            }
         }
     });
 }
