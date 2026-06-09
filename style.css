@@ -15,7 +15,7 @@ body.light-mode {
     --border-color: #dddddd;
     --text-main: #111111;
     --text-muted: #555555;
-    --input-bg: #f9f9f9;
+    --input-bg: #f0f0f5;
     --button-bg: #111111;
     --button-text: #ffffff;
 }
@@ -62,8 +62,62 @@ body {
 .app-title {
     text-align: center;
     font-size: 2.2rem;
-    margin: 0 0 10px 0;
+    margin: 0 0 15px 0;
     letter-spacing: -1px;
+}
+
+/* Updated Toggle & Dropdown Controls */
+.view-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; 
+}
+
+.view-toggle {
+    display: inline-flex;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    padding: 4px;
+}
+
+.view-toggle button {
+    padding: 8px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 26px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: auto;
+}
+
+.view-toggle button.active {
+    background-color: var(--text-main);
+    color: var(--bg-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.month-select {
+    padding: 8px 12px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.month-select:hover {
+    border-color: var(--text-muted);
 }
 
 .quote-container {
