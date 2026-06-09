@@ -37,6 +37,7 @@ monthSelect.addEventListener('change', () => {
 
 // --- Quotes Array ---
 const quotes = [
+    "Chase Goals instead of Holes. - Shafi",
     "Consistency is what transforms average into excellence.",
     "The expert in anything was once a beginner.",
     "Small disciplines repeated with consistency every day lead to great achievements.",
