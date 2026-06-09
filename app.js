@@ -156,13 +156,27 @@ function updateUI() {
     const avgHours = activeDaysCount > 0 ? (totalHours / activeDaysCount).toFixed(1) : 0;
     
     let streak = 0;
-    for (let i = displayDates.length - 1; i >= 0; i--) {
-        if (allHoursByDate[displayDates[i]] > 0) {
-            streak++;
-        } else {
-            break;
+    if (displayDates.length > 0) {
+        // Start counting backwards from the most recent date on the graph
+        let checkDate = new Date(displayDates[displayDates.length - 1]);
+        
+        while (true) {
+            // Format date to match your database (YYYY-MM-DD)
+            const year = checkDate.getFullYear();
+            const month = String(checkDate.getMonth() + 1).padStart(2, '0');
+            const day = String(checkDate.getDate()).padStart(2, '0');
+            const dateStrToCheck = `${year}-${month}-${day}`;
+
+            // If this specific calendar day has more than 0 hours, increase streak
+            if (allHoursByDate[dateStrToCheck] > 0) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1); // Move backward exactly 1 day
+            } else {
+                break; // Streak broken by a 0 OR a completely missing day
+            }
         }
     }
+
 
     document.getElementById('total-hours').textContent = totalHours.toFixed(1);
     document.getElementById('avg-hours').innerHTML = `${avgHours} <span>hrs</span>`;
