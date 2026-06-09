@@ -5,7 +5,13 @@ const hoursInput = document.getElementById('hours');
 const quoteContainer = document.getElementById('quote-container');
 const themeToggleBtn = document.getElementById('theme-toggle');
 
+const btn30Days = document.getElementById('btn-30days');
+const btnAll = document.getElementById('btn-all');
+const monthSelect = document.getElementById('month-select');
+
 let myChart = null;
+let currentView = '30days'; 
+let selectedMonthStr = ''; 
 
 // --- Theme Logic ---
 let isLightMode = localStorage.getItem('theme') === 'light';
@@ -29,9 +35,37 @@ themeToggleBtn.addEventListener('click', () => {
     updateUI(); 
 });
 
+// --- View Controls Logic ---
+btn30Days.addEventListener('click', () => {
+    currentView = '30days';
+    btn30Days.classList.add('active');
+    btnAll.classList.remove('active');
+    monthSelect.value = ''; 
+    updateUI();
+});
+
+btnAll.addEventListener('click', () => {
+    currentView = 'all';
+    btnAll.classList.add('active');
+    btn30Days.classList.remove('active');
+    monthSelect.value = ''; 
+    updateUI();
+});
+
+monthSelect.addEventListener('change', (e) => {
+    if (e.target.value !== '') {
+        currentView = 'month';
+        selectedMonthStr = e.target.value; 
+        btn30Days.classList.remove('active');
+        btnAll.classList.remove('active');
+        updateUI();
+    } else {
+        btn30Days.click(); // Fallback if they select the empty default option
+    }
+});
+
 // --- Quotes Array ---
 const quotes = [
-    "Chase goals instead of holes - Shafi",
     "Consistency is what transforms average into excellence.",
     "The expert in anything was once a beginner.",
     "Small disciplines repeated with consistency every day lead to great achievements.",
@@ -75,8 +109,34 @@ if (!sessions || sessions.length === 0) {
     localStorage.setItem('studyDB_v2', JSON.stringify(sessions));
 }
 
-// --- Smart Date Helper ---
-// Takes a date string (YYYY-MM-DD) and returns the string for the next day
+// Scans database to populate the month dropdown
+function populateMonthsDropdown() {
+    const months = new Set();
+    sessions.forEach(s => {
+        months.add(s.date.substring(0, 7)); // Extracts 'YYYY-MM'
+    });
+    
+    const sortedMonths = Array.from(months).sort().reverse(); 
+    const currentVal = monthSelect.value;
+    
+    monthSelect.innerHTML = '<option value="">Select Month...</option>';
+    
+    sortedMonths.forEach(m => {
+        const [year, month] = m.split('-');
+        const dateObj = new Date(year, month - 1);
+        const monthName = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        
+        const option = document.createElement('option');
+        option.value = m;
+        option.textContent = monthName;
+        monthSelect.appendChild(option);
+    });
+    
+    if (sortedMonths.includes(currentVal)) {
+        monthSelect.value = currentVal;
+    }
+}
+
 function getNextDayStr(dateStr) {
     const [year, month, day] = dateStr.split('-');
     const nextDate = new Date(year, month - 1, day);
@@ -89,7 +149,6 @@ function getNextDayStr(dateStr) {
     return `${nextYear}-${nextMonth}-${nextDay}`;
 }
 
-// Set initial date on load
 if (sessions.length > 0) {
     const sortedDates = sessions.map(s => s.date).sort();
     const latestDate = sortedDates[sortedDates.length - 1];
@@ -100,22 +159,33 @@ if (sessions.length > 0) {
 
 // --- Core Logic ---
 function updateUI() {
-    let totalHours = 0;
-    const hoursByDate = {};
+    const allHoursByDate = {};
     
     sessions.forEach(session => {
         const hrs = parseFloat(session.hours);
-        totalHours += hrs;
-        hoursByDate[session.date] = (hoursByDate[session.date] || 0) + hrs;
+        allHoursByDate[session.date] = (allHoursByDate[session.date] || 0) + hrs;
     });
 
-    const sortedDates = Object.keys(hoursByDate).sort();
-    const activeDaysCount = sortedDates.filter(date => hoursByDate[date] > 0).length;
+    const allSortedDates = Object.keys(allHoursByDate).sort();
+    
+    // Filter dates based on current view
+    let displayDates = allSortedDates;
+    if (currentView === '30days') {
+        displayDates = allSortedDates.slice(-30);
+    } else if (currentView === 'month') {
+        displayDates = allSortedDates.filter(date => date.startsWith(selectedMonthStr));
+    }
+
+    // Calculate Stats
+    let totalHours = 0;
+    displayDates.forEach(date => totalHours += allHoursByDate[date]);
+
+    const activeDaysCount = displayDates.filter(date => allHoursByDate[date] > 0).length;
     const avgHours = activeDaysCount > 0 ? (totalHours / activeDaysCount).toFixed(1) : 0;
     
     let streak = 0;
-    for (let i = sortedDates.length - 1; i >= 0; i--) {
-        if (hoursByDate[sortedDates[i]] > 0) {
+    for (let i = displayDates.length - 1; i >= 0; i--) {
+        if (allHoursByDate[displayDates[i]] > 0) {
             streak++;
         } else {
             break;
@@ -126,16 +196,16 @@ function updateUI() {
     document.getElementById('avg-hours').innerHTML = `${avgHours} <span>hrs</span>`;
     document.getElementById('streak-days').innerHTML = `${streak} <span>days</span>`;
 
-    updateChart(sortedDates, hoursByDate);
+    updateChart(displayDates, allHoursByDate);
 }
 
-function updateChart(sortedDates, hoursByDate) {
+function updateChart(displayDates, allHoursByDate) {
     const ctx = document.getElementById('studyChart').getContext('2d');
-    const dataPoints = sortedDates.map(date => hoursByDate[date]);
+    const dataPoints = displayDates.map(date => allHoursByDate[date]);
 
     if (myChart) myChart.destroy();
 
-    const formattedLabels = sortedDates.map(dateStr => {
+    const formattedLabels = displayDates.map(dateStr => {
         const d = new Date(dateStr);
         const day = d.toLocaleDateString('en-US', { day: '2-digit' });
         const month = d.toLocaleDateString('en-US', { month: 'short' });
@@ -210,12 +280,15 @@ form.addEventListener('submit', (e) => {
 
     localStorage.setItem('studyDB_v2', JSON.stringify(sessions));
     
-    // Automatically advance to the next day and clear the hours input
+    populateMonthsDropdown(); // Re-scan in case they just added a new month
+    
     dateInput.value = getNextDayStr(dateInput.value);
     hoursInput.value = '';
     
     updateUI();
 });
 
+// Initialization
+populateMonthsDropdown();
 displayRandomQuote();
 updateUI();
